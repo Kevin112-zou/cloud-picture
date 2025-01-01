@@ -1,6 +1,8 @@
 package com.yupi.yupicturebackend.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.server.HttpServerRequest;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,15 +11,19 @@ import com.yupi.yupicturebackend.constant.UserConstant;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.mapper.UserMapper;
+import com.yupi.yupicturebackend.model.dto.user.UserQueryRequest;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.yupi.yupicturebackend.model.enums.UserRoleEnum;
 import com.yupi.yupicturebackend.model.vo.LoginUserVo;
+import com.yupi.yupicturebackend.model.vo.UserVo;
 import com.yupi.yupicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
+import java.util.List;
 
 /**
 * @author Lenovo
@@ -99,6 +105,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         BeanUtil.copyProperties(user,loginUserVo);
         return loginUserVo;
     }
+
+    /**
+     *  获取脱敏后的用户信息
+     * @param user 用户账号
+     * @return 脱敏信息
+     */
+    @Override
+    public UserVo getUserVo(User user) {
+        if(user == null){
+            return null;
+        }
+        UserVo userVo = new UserVo();
+        BeanUtil.copyProperties(user,userVo);
+        return userVo;
+    }
+
+    /**
+     *  获取脱敏后的用户信息
+     * @param userList 用户列表
+     * @return 脱敏后的用户信息列表
+     */
+    @Override
+    public List<UserVo> getUserVoList(List<User> userList) {
+        if(CollUtil.isEmpty(userList)){
+            return null;
+        }
+        List<UserVo> userVoList = CollUtil.newArrayList();
+        for(User user : userList){
+            UserVo userVo = getUserVo(user);
+            if(userVo != null){
+                userVoList.add(userVo);
+            }
+        }
+        // stream写法
+        // userVoList = userList.stream().map(this::getUserVo).collect(Collectors.toList());
+        return userVoList;
+    }
+
     /**
      * 用户注销
      *
@@ -139,6 +183,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return user;
     }
+
+    @Override
+    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        Long id = userQueryRequest.getId();
+        String userAccount = userQueryRequest.getUserAccount();
+        String userName = userQueryRequest.getUserName();
+        String userProfile = userQueryRequest.getUserProfile();
+        String userRole = userQueryRequest.getUserRole();
+        String sortField = userQueryRequest.getSortField();
+        String sortOrder = userQueryRequest.getSortOrder();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(ObjUtil.isNotNull(id), "id", id);  // 这里的id是前端传过来的，所以需要判断是否为空
+        queryWrapper.eq(StrUtil.isNotBlank(userRole), "userRole", userRole); // 这里的userRole是前端传过来的，所以需要判断是否为空
+        queryWrapper.like(StrUtil.isNotBlank(userAccount), "userAccount", userAccount); // 这里的userAccount是前端传过来的，所以需要判断是否为空
+        queryWrapper.like(StrUtil.isNotBlank(userName), "userName", userName); // 这里的userName是前端传过来的，所以需要判断是否为空
+        queryWrapper.like(StrUtil.isNotBlank(userProfile), "userProfile", userProfile); // 这里的userProfile是前端传过来的，所以需要判断是否为空
+        queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
+        return queryWrapper;
+    }
+
 
     @Override
     public LoginUserVo userLogin(String userAccount, String userPassword, HttpServletRequest request) {

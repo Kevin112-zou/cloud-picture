@@ -1,13 +1,11 @@
 package com.yupi.yupicturebackend.controller;
 
-import com.yupi.yupicturebackend.annotation.AuthCheck;
 import com.yupi.yupicturebackend.common.BaseResponse;
 import com.yupi.yupicturebackend.common.ResultUtils;
-import com.yupi.yupicturebackend.constant.UserConstant;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.exception.ThrowUtils;
-import com.yupi.yupicturebackend.model.dto.UserLoginRequest;
-import com.yupi.yupicturebackend.model.dto.UserRegisterRequest;
+import com.yupi.yupicturebackend.model.dto.user.UserLoginRequest;
+import com.yupi.yupicturebackend.model.dto.user.UserRegisterRequest;
 import com.yupi.yupicturebackend.model.vo.LoginUserVo;
 import com.yupi.yupicturebackend.service.UserService;
 import org.springframework.web.bind.annotation.*;

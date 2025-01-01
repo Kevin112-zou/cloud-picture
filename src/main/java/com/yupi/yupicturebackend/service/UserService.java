@@ -1,11 +1,15 @@
 package com.yupi.yupicturebackend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.yupi.yupicturebackend.model.dto.user.UserQueryRequest;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.model.vo.LoginUserVo;
+import com.yupi.yupicturebackend.model.vo.UserVo;
 import lombok.Data;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Lenovo
@@ -40,11 +44,24 @@ public interface UserService extends IService<User> {
     LoginUserVo userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
-     *  获取脱敏后的登录信息
+     *  获取脱敏后的登录用户信息
      * @param user 用户账号
      * @return 脱敏信息
      */
     LoginUserVo getLoginUserVo(User user);
+
+    /**
+     *  获取脱敏后的用户信息
+     * @param user 用户账号
+     * @return 脱敏信息
+     */
+    UserVo getUserVo(User user);
+
+    /**
+     *  获取脱敏后的用户信息
+     * @return 脱敏后的用户信息列表
+     */
+    List<UserVo> getUserVoList(List<User> userList);
 
     /**
      * 用户注销
@@ -60,4 +77,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 获取查询条件包装类
+     * @param userQueryRequest
+     * @return 查询条件包装类
+     */
+    QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 }
