@@ -84,4 +84,11 @@ public interface UserService extends IService<User> {
      * @return 查询条件包装类
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+
+    /**
+     *  获取当前登录用户信息
+     * @param loginUser 登录用户
+     * @return 脱敏信息
+     */
+    LoginUserVo getLoginUserVO(User loginUser);
 }

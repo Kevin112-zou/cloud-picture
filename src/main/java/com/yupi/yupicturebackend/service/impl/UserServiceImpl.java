@@ -17,6 +17,7 @@ import com.yupi.yupicturebackend.model.vo.LoginUserVo;
 import com.yupi.yupicturebackend.model.vo.UserVo;
 import com.yupi.yupicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -203,6 +204,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
         return queryWrapper;
     }
+
+    /**
+     * 获取脱敏后的登录信息
+     *
+     * @param user 登录用户
+     * @return
+     */
+    @Override
+    public LoginUserVo getLoginUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
+        LoginUserVo loginUserVO = new LoginUserVo();
+        BeanUtils.copyProperties(user, loginUserVO);
+        return loginUserVO;
+    }
+
 
 
     @Override
