@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.server.HttpServerRequest;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yupi.yupicturebackend.constant.UserConstant;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -82,8 +80,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
     /**
      * 获取加密后的密码
-     * @param userPassword
-     * @return
+     * @param userPassword 用户密码
+     * @return  加密后的密码
      */
     @Override
     public String getEncryptPassword(String userPassword){
@@ -122,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
-     *  获取脱敏后的用户信息
+     *  获取脱敏后的用户信息列表
      * @param userList 用户列表
      * @return 脱敏后的用户信息列表
      */

@@ -80,7 +80,7 @@ public interface UserService extends IService<User> {
 
     /**
      * 获取查询条件包装类
-     * @param userQueryRequest
+     * @param userQueryRequest 查询请求
      * @return 查询条件包装类
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
