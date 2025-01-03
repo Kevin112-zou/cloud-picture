@@ -71,7 +71,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserRole(UserRoleEnum.USER.getValue());
         user.setUserPassword(encryptPassword);
-        user.setUserName("小黑字");
+        user.setUserName(UserConstant.DEFAULT_NICKNAME);
+        user.setUserAvatar(UserConstant.DEFAULT_AVATAR);
         boolean result = this.save(user);
         if(!result){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"注册失败，数据库错误！");
@@ -182,6 +183,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return user;
     }
+
+    /**
+     * 根据条件获取用户列表
+     * @param userQueryRequest 查询请求
+     * @return 用户列表
+     */
 
     @Override
     public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {

@@ -173,11 +173,11 @@ public class UserController {
      */
     @PostMapping("/list/page/vo")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE) // 限定只有管理员可以调用
-    public BaseResponse<Page<UserVo>> pageQueryUser(@RequestBody UserQueryRequest userQueryRequest) {
+    public BaseResponse<Page<UserVo>> listUserVoByPage(@RequestBody UserQueryRequest userQueryRequest) {
         ThrowUtils.throwIf(userQueryRequest == null, ErrorCode.PARAMS_ERROR);
         long current = userQueryRequest.getCurrent(); // 获取当前页码
         long pageSize = userQueryRequest.getPageSize();// 获取页面大小
-        // 封装分页查询条件
+        // 封装分页查询条件, 查询用户列表(模糊查询)
         Page<User> userPage = userService.page(new Page<>(current, pageSize), userService.getQueryWrapper(userQueryRequest));
         Page<UserVo> userVoPage = new Page<>(current,pageSize, userPage.getTotal());
 
