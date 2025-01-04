@@ -51,6 +51,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = new Picture();
         BeanUtils.copyProperties(uploadPictureResult, picture);
         picture.setName(uploadPictureResult.getPicName());
+        picture.setUserId(loginUser.getId());
 //        picture.setUrl(uploadPictureResult.getUrl());
 //        picture.setName(uploadPictureResult.getPicName());
 //        picture.setPicSize(uploadPictureResult.getPicSize());

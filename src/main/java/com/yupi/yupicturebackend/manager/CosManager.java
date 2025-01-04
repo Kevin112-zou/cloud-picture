@@ -50,7 +50,7 @@ public class CosManager {
     }
 
     /**
-     * 上传并解析图片
+     * 上传并解析图片（图片处理）
      */
     public PutObjectResult putPictureObject(String key, File file) {
         // 创建上传 PutObjectRequest 对象

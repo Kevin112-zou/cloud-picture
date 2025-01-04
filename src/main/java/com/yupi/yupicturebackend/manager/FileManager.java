@@ -62,8 +62,8 @@ public class FileManager {
             file = File.createTempFile(uploadPath, null); // 创建临时文件
             // 将文件写入到临时目录
             multipartFile.transferTo(file);
-            // 上传文件到COS
-            PutObjectResult putObjectResult = cosManager.putObject(uploadPath, file);
+            // 上传文件到COS，必须添加图片处理参数，否则无法获取图片信息
+            PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             // 获取图片对象信息
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             int picWidth = imageInfo.getWidth();
