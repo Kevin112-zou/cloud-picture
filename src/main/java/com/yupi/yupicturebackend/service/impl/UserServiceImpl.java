@@ -228,6 +228,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return loginUserVO;
     }
 
+    @Override
+    public boolean isAdmin(User loginUser) {
+        if(loginUser == null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,"用户未登录");
+        }
+        String userRole = loginUser.getUserRole();
+        return UserRoleEnum.ADMIN.getValue().equals(userRole);
+    }
 
 
     @Override

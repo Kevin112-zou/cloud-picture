@@ -91,4 +91,11 @@ public interface UserService extends IService<User> {
      * @return 脱敏信息
      */
     LoginUserVo getLoginUserVO(User loginUser);
+
+    /**
+     * 判断是否为管理员
+     * @param loginUser 登录用户
+     * @return 是否为管理员
+     */
+    public boolean isAdmin(User loginUser);
 }
