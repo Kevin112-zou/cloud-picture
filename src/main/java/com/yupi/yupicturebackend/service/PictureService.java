@@ -3,6 +3,7 @@ package com.yupi.yupicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.yupicturebackend.model.dto.picture.PictureQueryRequest;
+import com.yupi.yupicturebackend.model.dto.picture.PictureReviewRequest;
 import com.yupi.yupicturebackend.model.dto.picture.PictureUploadRequest;
 import com.yupi.yupicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -60,4 +61,18 @@ public interface PictureService extends IService<Picture> {
      * @return 脱敏后图片信息列表
      */
     Page<PictureVO> getPictureVOPage(Page<Picture> page, HttpServletRequest httpServletRequest);
+
+    /**
+     * 审核图片
+     * @param pictureReviewRequest 审核请求
+     * @param user 审核用户
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User user);
+
+    /**
+     * 填充审核参数(编辑，上传，更新共用)
+     * @param picture 图片信息
+     * @param loginUser 登录用户
+     */
+    void fillReviewParams(Picture picture, User loginUser);
 }
