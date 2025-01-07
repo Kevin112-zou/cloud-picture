@@ -91,7 +91,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
         }
-        // 上传图片，得到图片信息
+        // 上传图片/public桶，得到图片信息
         String uploadPathPrefix = String.format("public/%s", loginUser.getId()); // 图片上传路径前缀
         UploadPictureResult uploadPictureResult = fileManager.uploadPicture(multipartFile, uploadPathPrefix);
         // 构造要入库的图片信息
@@ -255,7 +255,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public void fillReviewParams(Picture picture, User loginUser) {
         if (userService.isAdmin(loginUser)) {
-            // 管理员自动过审
+            // 管理员自动过审 + 设置审核通过信息
             picture.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
             picture.setReviewerId(loginUser.getId());
             picture.setReviewTime(new Date());
@@ -266,6 +266,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         }
     }
+
 
 }
 
