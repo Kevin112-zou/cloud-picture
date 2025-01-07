@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.yupicturebackend.model.dto.picture.PictureQueryRequest;
 import com.yupi.yupicturebackend.model.dto.picture.PictureReviewRequest;
+import com.yupi.yupicturebackend.model.dto.picture.PictureUploadByBatchRequest;
 import com.yupi.yupicturebackend.model.dto.picture.PictureUploadRequest;
 import com.yupi.yupicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -19,23 +20,22 @@ import javax.servlet.http.HttpServletRequest;
  * @createDate 2025-01-04 13:04:49
  */
 public interface PictureService extends IService<Picture> {
-    /**
-     * 上传图片
-     *
-     * @param multipartFile        图片文件
-     * @param pictureUploadRequest 图片上传请求
-     * @param loginUser            登录用户
-     * @return 图片信息
-     */
-    PictureVO uploadPicture(MultipartFile multipartFile,
-                            PictureUploadRequest pictureUploadRequest,
-                            User loginUser);
 
     /**
      * 校验图片
      * @param picture 图片信息
      */
     void validPicture(Picture picture);
+
+    /**
+     * 上传图片
+     * @param inputSource 图片输入源
+     * @param pictureUploadRequest 图片上传请求
+     * @param loginUser 登录用户
+     * @return
+     */
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
+
     /**
      * 根据条件获取查询对象
      *
@@ -75,4 +75,12 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser 登录用户
      */
     void fillReviewParams(Picture picture, User loginUser);
+
+    /**
+     *  批量抓取并上传图片
+     * @param pictureUploadByBatchRequest 批量上传图片请求
+     * @param loginUser 登录用户(admin才能使用)
+     * @return 上传成功数量
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 }

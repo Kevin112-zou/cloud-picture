@@ -7,28 +7,28 @@ import java.util.List;
 
 
 /**
- * 图片上传请求
+ * 批量上传图片请求参数
  */
 @Data
-public class PictureUploadRequest implements Serializable {
+public class PictureUploadByBatchRequest implements Serializable {
 
     /**
-     * 图片id(用户修改)
+     * 搜索关键词
      */
-    private Long id;
+    private String searchText;
 
     /**
-     * 文件地址
+     * 抓取数量，默认为10
      */
-    private String fileUrl;
+    private Integer count = 10;
 
     /**
-     * 指定图片名称
+     * 图片名称前缀
      */
-    private String picName;
+    private String namePrefix;
 
     /**
-     * 图片标签list
+     * 图片标签
      */
     private List<String> tags;
 
