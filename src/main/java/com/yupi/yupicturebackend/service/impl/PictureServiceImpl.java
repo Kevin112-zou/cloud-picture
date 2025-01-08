@@ -2,7 +2,6 @@ package com.yupi.yupicturebackend.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -10,10 +9,15 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.yupi.yupicturebackend.config.CacheConfig;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.exception.ThrowUtils;
-import com.yupi.yupicturebackend.manager.FileManager;
 import com.yupi.yupicturebackend.manager.upload.FilePictureUpload;
 import com.yupi.yupicturebackend.manager.upload.PictureUploadTemplate;
 import com.yupi.yupicturebackend.manager.upload.UrlPictureUpload;
@@ -36,13 +40,18 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +74,25 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Resource
     private UrlPictureUpload urlPictureUpload;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private CacheConfig cacheConfig;
+    /**
+     * 本地缓存
+     */
+    private final LoadingCache<String, String> LOCAL_CACHE = Caffeine.newBuilder()
+            .initialCapacity(1024) // 初始容量
+            .maximumSize(10000) // 最大容量
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .build(key -> loadDataFromDataSource(key));
+
+    private String loadDataFromDataSource(String key) {
+        // 这里编写从实际数据源获取数据的逻辑
+        // 例如从数据库查询数据，这里只是简单返回一个示例字符串
+        return "Data for key: " + key;
+    }
 
     public void validPicture(Picture picture) {
         // 校验逻辑
@@ -368,6 +396,49 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadedCount;
+    }
+
+    @Override
+    public Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+
+        // 构建key
+        String questCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+        // 使用md5加密作为key, 防止key太长导致redis报错
+        String hashKey = DigestUtils.md5DigestAsHex(questCondition.getBytes());
+        // 构建key  = "项目名称:方法名:参数"
+        String cacheKey = "picture:listPictureVOByPage:" + hashKey;
+
+        // 使用多级缓存 一级：本地缓存，二级：redis缓存
+
+        // 1. 从本地缓存查询
+        String localCache = LOCAL_CACHE.getIfPresent(cacheKey);
+        if (localCache != null) {
+            // 缓存命中，直接返回
+            Page<PictureVO> cachePage = JSONUtil.toBean(localCache, Page.class);
+            return cachePage;
+        }
+        // 2. 本地缓存未命中，从redis查询
+        ValueOperations<String, String> opsForValue = stringRedisTemplate.opsForValue();
+        String cacheValue = opsForValue.get(cacheKey);
+        if (cacheValue != null) {
+            // 缓存命中，先更新本地缓存
+            LOCAL_CACHE.put(cacheKey, cacheValue);
+            Page<PictureVO> cachePage = JSONUtil.toBean(cacheValue, Page.class);
+            return cachePage;
+        }
+        // 3. 都未命中，查询数据库
+        Page<Picture> picturePage = this.page(new Page<>(pictureQueryRequest.getCurrent(), pictureQueryRequest.getPageSize()),
+                this.getQueryWrapper(pictureQueryRequest));
+        Page<PictureVO> pictureVOPage = this.getPictureVOPage(picturePage, request);
+        // 4. 更新本地缓存和redis缓存
+        // 将数据重新存入 redis，设置过期时间5-10分钟
+        String cacheValueVo = JSONUtil.toJsonStr(pictureVOPage);
+        // 设置过期时间
+        int cacheExpireSeconds = 300 + RandomUtil.randomInt(0, 300); // 5-10分钟
+        opsForValue.set(cacheKey, cacheValueVo, cacheExpireSeconds, TimeUnit.SECONDS);
+        // 更新本地缓存
+        LOCAL_CACHE.put(cacheKey, cacheValueVo);
+        return pictureVOPage;
     }
 }
 

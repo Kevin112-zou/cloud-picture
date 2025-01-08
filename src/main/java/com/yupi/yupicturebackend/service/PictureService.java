@@ -10,7 +10,6 @@ import com.yupi.yupicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.yupi.yupicturebackend.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -83,4 +82,12 @@ public interface PictureService extends IService<Picture> {
      * @return 上传成功数量
      */
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
+    /**
+     * 根据条件获取查询对象
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 }

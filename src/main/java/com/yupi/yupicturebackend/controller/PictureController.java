@@ -2,6 +2,7 @@ package com.yupi.yupicturebackend.controller;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import com.yupi.yupicturebackend.annotation.AuthCheck;
 import com.yupi.yupicturebackend.common.BaseResponse;
 import com.yupi.yupicturebackend.common.DeleteRequest;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -193,6 +195,64 @@ public class PictureController {
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
     }
+
+    /**
+     * 分页获取图片列表,使用缓存（封装类）
+     */
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                                      HttpServletRequest request) {
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫, 一次请求最多返回 20 条数据
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 查询数据库(普通用户默认只能查看审核通过的图片)
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+
+        Page<PictureVO> pictureVOPage = pictureService.listPictureVOByPageWithCache(pictureQueryRequest, request);
+        return ResultUtils.success(pictureVOPage);
+    }
+
+//    private BaseResponse<Page<PictureVO>> getPageBaseResponse(PictureQueryRequest pictureQueryRequest, HttpServletRequest request, long current, long size) {
+//        // 构建key
+//        String questCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+//        // 使用md5加密作为key, 防止key太长导致redis报错
+//        String hashKey = DigestUtils.md5DigestAsHex(questCondition.getBytes());
+//        // 构建key  = "项目名称:方法名:参数"
+//        String cacheKey = "picture:listPictureVOByPage:" + hashKey;
+//
+//        // 使用多级缓存 一级：本地缓存，二级：redis缓存
+//
+//        // 1. 从本地缓存查询
+//        String localCache = LOCAL_CACHE.getIfPresent(cacheKey);
+//        if (localCache != null) {
+//            // 缓存命中，直接返回
+//            Page<PictureVO> cachePage = JSONUtil.toBean(localCache, Page.class);
+//            return ResultUtils.success(cachePage);
+//        }
+//        // 2. 本地缓存未命中，从redis查询
+//        ValueOperations<String, String> opsForValue = stringRedisTemplate.opsForValue();
+//        String cacheValue = opsForValue.get(cacheKey);
+//        if (cacheValue != null) {
+//            // 缓存命中，先更新本地缓存
+//            LOCAL_CACHE.put(cacheKey, cacheValue);
+//            Page<PictureVO> cachePage = JSONUtil.toBean(cacheValue, Page.class);
+//            return ResultUtils.success(cachePage);
+//        }
+//        // 3. 都未命中，查询数据库
+//        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+//                pictureService.getQueryWrapper(pictureQueryRequest));
+//        Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
+//        // 4. 更新本地缓存和redis缓存
+//        // 将数据重新存入 redis，设置过期时间5-10分钟
+//        String cacheValueVo = JSONUtil.toJsonStr(pictureVOPage);
+//        // 设置过期时间
+//        int cacheExpireSeconds = 300 + RandomUtil.randomInt(0, 300); // 5-10分钟
+//        opsForValue.set(cacheKey, cacheValueVo, cacheExpireSeconds, TimeUnit.SECONDS);
+//        // 更新本地缓存
+//        LOCAL_CACHE.put(cacheKey, cacheValueVo);
+//        return ResultUtils.success(pictureVOPage);
+//    }
 
     /**
      * 编辑图片（给用户使用）

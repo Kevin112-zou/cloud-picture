@@ -11,6 +11,13 @@ spring:
     url: jdbc:mysql://localhost:3306/yu_picture?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
     username: root
     password: 123456
+    # 环境配置（本地）
+    # profiles:
+    # active: local
+  # 文件上传最大限制
+  servlet:
+    multipart:
+      max-file-size: 10MB
 mybatis-plus:
   configuration:
     # MyBatis 配置
@@ -30,7 +37,7 @@ knife4j:
     version: 1.0
     group:
       default:
-#        group-name: 默认分组
+        #        group-name: 默认分组
         api-rule: package
         api-rule-resources:
           - com.yupi.yupicturebackend.controller
