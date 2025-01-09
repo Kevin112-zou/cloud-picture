@@ -1,11 +1,14 @@
 package com.yupi.yupicturebackend.manager.upload;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.yupi.yupicturebackend.config.CosClientConfig;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
@@ -17,6 +20,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 图片上传模板类
@@ -62,6 +66,15 @@ public abstract class PictureUploadTemplate {
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             // 获取图片对象信息
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
+            // 获取图片处理后的信息，封装返回结果
+            ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+            List<CIObject> objectList = processResults.getObjectList();
+            if (CollUtil.isNotEmpty(objectList)) {
+                // 获取压缩之后的图片信息
+                CIObject compressdCiobject = objectList.get(0);
+                // 封装压缩后的返回结果
+                return buildResult(originalFilename, compressdCiobject);
+            }
             // 封装返回结果
             return buildUploadPictureResult(imageInfo, uploadPath, originalFilename, file);
         } catch (Exception e) {
@@ -73,6 +86,30 @@ public abstract class PictureUploadTemplate {
             deleteTempFile(file);
         }
 
+    }
+
+    /**
+     * 封装返回结果
+     *
+     * @param originalFilename  COS返回的图片信息
+     * @param compressdCiobject 压缩后的图片信息
+     * @return 上传结果封装类
+     */
+
+    private UploadPictureResult buildResult(String originalFilename, CIObject compressdCiobject) {
+        int picWidth = compressdCiobject.getWidth();
+        int picHeight = compressdCiobject.getHeight();
+        double picScale = NumberUtil.round((picWidth * 1.0) / picHeight, 2).doubleValue(); // 计算宽高比
+        // 封装返回结果
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressdCiobject.getKey()); // 图片访问地址
+        uploadPictureResult.setPicName(FileUtil.mainName(originalFilename)); // 图片名称
+        uploadPictureResult.setPicSize(compressdCiobject.getSize().longValue()); // 图片大小
+        uploadPictureResult.setPicWidth(picWidth); // 图片宽
+        uploadPictureResult.setPicHeight(picHeight); // 图片高
+        uploadPictureResult.setPicScale(picScale); // 宽高比
+        uploadPictureResult.setPicFormat(compressdCiobject.getFormat()); // 图片格式
+        return uploadPictureResult;
     }
 
     /**
@@ -91,7 +128,7 @@ public abstract class PictureUploadTemplate {
         double picScale = NumberUtil.round((picWidth * 1.0) / picHeight, 2).doubleValue(); // 计算宽高比
         // 封装返回结果
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
-        uploadPictureResult.setUrl(cosClientConfig.getHost() + uploadPath); // 图片访问地址
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + uploadPath); // 图片访问地址
         uploadPictureResult.setPicName(FileUtil.mainName(originalFilename)); // 图片名称
         uploadPictureResult.setPicSize(FileUtil.size(file)); // 图片大小
         uploadPictureResult.setPicWidth(picWidth); // 图片宽

@@ -1,5 +1,6 @@
 package com.yupi.yupicturebackend.manager;
 
+import cn.hutool.core.io.FileUtil;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CosManager {
@@ -60,7 +63,19 @@ public class CosManager {
         PicOperations picOperations = new PicOperations();
         // 1 表示返回原图信息
         picOperations.setIsPicInfo(1);
+
+        // 图片压缩处理
+        List<PicOperations.Rule> rules = new ArrayList<>(); // 规则列表
+        String webpKey = FileUtil.mainName(key) + ".webp";
+        PicOperations.Rule compressRule = new PicOperations.Rule();
+        // 设置压缩规则（webp）
+        compressRule.setFileId(webpKey);
+        compressRule.setBucket(cosClientConfig.getBucket());
+        compressRule.setRule("imageMogr2/format/webp");
+        rules.add(compressRule);
+
         // 2. 构造处理函数
+        picOperations.setRules(rules);
         putObjectRequest.setPicOperations(picOperations);
         // 3. 上传对象
         return cosClient.putObject(putObjectRequest);
