@@ -10,14 +10,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.yupi.yupicturebackend.config.CacheConfig;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.exception.ThrowUtils;
+import com.yupi.yupicturebackend.manager.CosManager;
 import com.yupi.yupicturebackend.manager.upload.FilePictureUpload;
 import com.yupi.yupicturebackend.manager.upload.PictureUploadTemplate;
 import com.yupi.yupicturebackend.manager.upload.UrlPictureUpload;
@@ -42,6 +40,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -51,7 +50,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -78,7 +76,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private StringRedisTemplate stringRedisTemplate;
 
     @Resource
-    private CacheConfig cacheConfig;
+    private CosManager cosManager;
     /**
      * 本地缓存
      */
@@ -126,7 +124,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             pictureId = pictureUploadRequest.getId();
         }
         // 如果是更新，则查询数据库是否存在该id的图片
-        // todo:新增图片上传审核功能
         if (pictureId != null) {
             Picture oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
@@ -138,7 +135,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 上传图片/public桶，得到图片信息
         String uploadPathPrefix = String.format("public/%s", loginUser.getId()); // 图片上传路径前缀
 
-        // todo: 优化 根据inputSource的类型，选择不同的上传方式
         PictureUploadTemplate pictureUploadTemplate = filePictureUpload; // 默认使用文件上传方式
         if (inputSource instanceof String) {
             pictureUploadTemplate = urlPictureUpload; // 使用url上传方式
@@ -440,6 +436,28 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         LOCAL_CACHE.put(cacheKey, cacheValueVo);
         return pictureVOPage;
     }
+
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        // 判断该图片是否被多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        long count = this.lambdaQuery()
+                .eq(Picture::getUrl, pictureUrl)
+                .count();
+        // 有不止一条记录用到了该图片，不清理
+        if (count > 1) {
+            return;
+        }
+        // FIXME 注意，这里的 url 包含了域名，实际上只要传 key 值（存储路径）就够了
+        cosManager.deleteObject(oldPicture.getUrl());
+        // 清理缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
+    }
+
 }
 
 

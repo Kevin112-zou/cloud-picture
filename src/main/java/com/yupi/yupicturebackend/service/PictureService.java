@@ -10,6 +10,7 @@ import com.yupi.yupicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.yupi.yupicturebackend.model.vo.PictureVO;
+import org.springframework.scheduling.annotation.Async;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -90,4 +91,11 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 清除图片文件
+     * @param oldPicture
+     */
+    @Async
+    void clearPictureFile(Picture oldPicture);
 }

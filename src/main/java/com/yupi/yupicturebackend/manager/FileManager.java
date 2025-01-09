@@ -123,7 +123,7 @@ public class FileManager {
     private void validPicture(MultipartFile multipartFile) {
         ThrowUtils.throwIf(multipartFile.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
         // 1, 校验文件大小
-        ThrowUtils.throwIf(multipartFile.getSize() > 1024 * 1024 * 2, ErrorCode.PARAMS_ERROR, "文件大小不能超过2MB");
+        ThrowUtils.throwIf(multipartFile.getSize() > 1024 * 1024 * 3, ErrorCode.PARAMS_ERROR, "文件大小不能超过3MB");
         // 2. 校验文件类型
         String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
         // 允许上传的文件后缀列表
@@ -219,7 +219,7 @@ public class FileManager {
                 try {
                     // 不为空才校验是否合法
                     long contentLength = NumberUtil.parseLong(contentLengthStr);
-                    ThrowUtils.throwIf(contentLength > 1024 * 1024 * 2, ErrorCode.PARAMS_ERROR, "文件大小不能超过2MB");
+                    ThrowUtils.throwIf(contentLength > 1024 * 1024 * 3, ErrorCode.PARAMS_ERROR, "文件大小不能超过3MB");
                 } catch (NumberFormatException e) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小不合法");
                 }

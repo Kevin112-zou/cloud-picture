@@ -35,6 +35,11 @@
             <artifactId>jsoup</artifactId>
             <version>1.15.3</version>
         </dependency>
+        <!-- Spring Session + Redis -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+        </dependency>
 
         <!--mybatis-plus工具： https://baomidou.com/getting-started/-->
         <dependency>
