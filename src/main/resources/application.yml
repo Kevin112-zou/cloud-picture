@@ -2,10 +2,18 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 259000
 spring:
   application:
     name: yu-picture-backend
-    # 数据库配置
+  session:
+    store-type: redis
+    # 过期时间 30 天
+    timeout: 2592000  # 30 * 86400 s
+  # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/yu_picture?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
@@ -14,6 +22,13 @@ spring:
     # 环境配置（本地）
     # profiles:
     # active: local
+  # Redis 配置
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    password: 123456
+    timeout: 5000
   # 文件上传最大限制
   servlet:
     multipart:
@@ -41,3 +56,11 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.yupi.yupicturebackend.controller
+# 对象存储配置（需要从腾讯云获取）
+cos:
+  client:
+    host: xxxx  # COS 域名
+    secretId: xxx #  开通对象存储的ID
+    secretKey: xxx # 开通对象存储的秘钥
+    region: xxxx # 地域，例如 ap-beijing
+    bucket: 1234567890 # 桶名

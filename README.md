@@ -72,11 +72,40 @@ SHARE-云图库是素材网站，基于vue3 + spring boot + COS对象存储 + we
 
 
 ## 环境搭建
-在项目目录下的`application-local.yml`修改自己的启动环境`spring.profiles.active` = `local`，填写自己的环境配置。
 
 如需使用对象存储COS服务，需先开通，详情请参考 [腾讯云官方文档](https://cloud.tencent.com/document/product/436/10199)
 
-
+在项目目录下的`application.yml`中填写自己的环境配置。
+1. 数据库配置
+```yml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/your_database_name
+    username: your_username
+    password: your_password
+```
+2. Redis配置
+```yml
+spring:
+  redis:
+    database: 0
+    host: your_redis_host
+    port: 6379
+    password: your_redis_password 
+    timeout: 5000
+```
+3. 对象存储COS配置
+```yml
+# 对象存储配置（需要从腾讯云获取）
+cos:
+  client:
+    host: xxx  # COS 域名
+    secretId: xxx #  开通对象存储的ID
+    secretKey: xxx # 开通对象存储的秘钥
+    region: xxx # 地域，例如 ap-beijing
+    bucket: 1234567890 # 桶名
+```
 ## 技术选型
 
 #### 后端
@@ -110,12 +139,5 @@ SHARE-云图库是素材网站，基于vue3 + spring boot + COS对象存储 + we
 |     ESLint     |       前端代码修复        |                 https://eslint.org/                 |
 |    Prettier    |      前端代码格式化       |                https://prettier.io/                 |
 |    OpenAPI     |      自动代码生成器       |  https://github.com/OpenAPITools/openapi-generator  |
-
-
-
-
-
-
-
 
 
