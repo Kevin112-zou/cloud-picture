@@ -14,7 +14,7 @@
 <div align="center">
     <a href="https://github.com/Kevin112-zou/cloud-picture"><img src="https://img.shields.io/badge/github-项目地址-yellow.svg?style=plasticr"></a>
     <a href="https://github.com/Kevin112-zou/cloud-picture"><img src="https://img.shields.io/badge/码云-项目地址-orange.svg?style=plasticr"></a>
-    <a href="https://github.com/Kevin112-zou/cloud-picture"><img src="https://img.shields.io/badge/前端-项目地址-blueviolet.svg?style=plasticr"></a>
+    <a href="https://github.com/Kevin112-zou/cloud-picture-web"><img src="https://img.shields.io/badge/前端-项目地址-blueviolet.svg?style=plasticr"></a>
 </div>
 
 
@@ -48,7 +48,7 @@ SHARE-云图库是素材网站，基于vue3 + spring boot + COS对象存储 + we
 
 > 成果：可用作表情包网站、设计素材网站、壁纸网站等
 
-[![pECbPTx.png](https://s21.ax1x.com/2025/01/10/pECbPTx.png)](https://imgse.com/i/pECbPTx)
+![](https://s21.ax1x.com/2025/01/10/pECbPTx.png)
 
 ![](https://s21.ax1x.com/2025/01/10/pECbFk6.png)
 
