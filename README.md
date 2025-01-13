@@ -110,34 +110,34 @@ cos:
 
 #### 后端
 
-|         技术         | 说明                      | 官网                                                 |
-| :------------------: | ------------------------- | ---------------------------------------------------- |
-|      SpringBoot      | java必备框架              | https://spring.io/projects/spring-boot               |
-|        MySql         | 关系型数据库              | https://dev.mysql.com/doc/                           |
+| 技术                 | 说明                      | 官网                                                 |
+|:---------------------|:--------------------------|:-----------------------------------------------------|
+| SpringBoot           | java必备框架              | https://spring.io/projects/spring-boot               |
+| MySql                | 关系型数据库              | https://dev.mysql.com/doc/                           |
 | MyBatisPlus+MyBatisX | 自带分页插件，自动生成sql | https://baomidou.com/                                |
-|        Redis         | 分布式缓存，提供高效性    | https://redis.io                                     |
-|       Caffeine       | 本地缓存                  | http://caffe.berkeleyvision.org/                     |
-|       Sa-Token       | 轻量级登录认证，权限认证  | https://sa-token.cc/v/v1.11.0/doc/index.html#/       |
-|        Jsoup         | 数据抓取                  | https://jsoup.org/                                   |
-|         COS          | 腾讯云对象存储            | https://cloud.tencent.com/document/product/436/10199 |
-|      Disruptor       | 高性能无锁队列            | https://github.com/LMAX-Exchange/disruptor           |
-|        Lombok        | 简化代码                  | https://projectlombok.org                            |
-|        Hutool        | Java工具类库              | https://github.com/looly/hutool                      |
-|       Knife4j        | API文档生成工具           | https://doc.xiaominfo.com/docs/quick-start           |
+| Redis                | 分布式缓存，提供高效性    | https://redis.io                                     |
+| Caffeine             | 本地缓存                  | http://caffe.berkeleyvision.org/                     |
+| Sa-Token             | 轻量级登录认证，权限认证  | https://sa-token.cc/v/v1.11.0/doc/index.html#/       |
+| Jsoup                | 数据抓取                  | https://jsoup.org/                                   |
+| COS                  | 腾讯云对象存储            | https://cloud.tencent.com/document/product/436/10199 |
+| Disruptor            | 高性能无锁队列            | https://github.com/LMAX-Exchange/disruptor           |
+| Lombok               | 简化代码                  | https://projectlombok.org                            |
+| Hutool               | Java工具类库              | https://github.com/looly/hutool                      |
+| Knife4j              | API文档生成工具           | https://doc.xiaominfo.com/docs/quick-start           |
 
 
 #### 前端
 
-|      技术      |           说明            |                        官网                         |
-| :------------: | :-----------------------: | :-------------------------------------------------: |
-|      vue3      |     前端流行开发框架      |    [https://cn.vuejs.org](https://cn.vuejs.org/)    |
-|     Pinia      |     全局状态管理框架      | [https://pinia.vuejs.org](https://pinia.vuejs.org/) |
-| Ant Design Vue |     轻松上手的组件库      |    https://www.antdv.com/components/overview-cn/    |
-|      Vite      |       前端打包工具        |   [https://cn.vitejs.dev](https://cn.vitejs.dev/)   |
-|     Axios      | 基于Promise 的HTTP 请求库 |          https://axios-http.com/docs/intro          |
-|   TypeScript   |    让 JS 具备类型声明     |           https://www.typescriptlang.org/           |
-|     ESLint     |       前端代码修复        |                 https://eslint.org/                 |
-|    Prettier    |      前端代码格式化       |                https://prettier.io/                 |
-|    OpenAPI     |      自动代码生成器       |  https://github.com/OpenAPITools/openapi-generator  |
+| 技术           | 说明                      | 官网                                                |
+|:---------------|:--------------------------|:----------------------------------------------------|
+| vue3           | 前端流行开发框架          | [https://cn.vuejs.org](https://cn.vuejs.org/)       |
+| Pinia          | 全局状态管理框架          | [https://pinia.vuejs.org](https://pinia.vuejs.org/) |
+| Ant Design Vue | 轻松上手的组件库          | https://www.antdv.com/components/overview-cn/       |
+| Vite           | 前端打包工具              | [https://cn.vitejs.dev](https://cn.vitejs.dev/)     |
+| Axios          | 基于Promise 的HTTP 请求库 | https://axios-http.com/docs/intro                   |
+| TypeScript     | 让 JS 具备类型声明        | https://www.typescriptlang.org/                     |
+| ESLint         | 前端代码修复              | https://eslint.org/                                 |
+| Prettier       | 前端代码格式化            | https://prettier.io/                                |
+| OpenAPI        | 自动代码生成器            | https://github.com/OpenAPITools/openapi-generator   |
 
 
