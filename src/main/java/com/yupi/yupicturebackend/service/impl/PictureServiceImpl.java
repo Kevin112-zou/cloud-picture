@@ -41,6 +41,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
@@ -58,8 +59,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
-        implements PictureService {
+public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> implements PictureService {
 
 
     @Resource
@@ -72,6 +72,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private UrlPictureUpload urlPictureUpload;
 
     @Resource
+    private TransactionTemplate transactionTemplate;
+
+    @Resource
     private SpaceService spaceService;
 
     @Resource
@@ -82,11 +85,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     /**
      * 本地缓存
      */
-    private final LoadingCache<String, String> LOCAL_CACHE = Caffeine.newBuilder()
-            .initialCapacity(1024) // 初始容量
+    private final LoadingCache<String, String> LOCAL_CACHE = Caffeine.newBuilder().initialCapacity(1024) // 初始容量
             .maximumSize(10000) // 最大容量
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .build(key -> loadDataFromDataSource(key));
+            .expireAfterWrite(5, TimeUnit.MINUTES).build(key -> loadDataFromDataSource(key));
 
     private String loadDataFromDataSource(String key) {
         // 这里编写从实际数据源获取数据的逻辑
@@ -128,6 +129,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             // 校验是否有上传权限(仅空间管理员可以上传)
             if (!loginUser.getId().equals(space.getUserId())) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限上传图片");
+            }
+            // 校验空间是否还有剩余容量
+            if (space.getTotalCount() >= space.getMaxCount()) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "空间条数不足");
+            }
+            if (space.getTotalSize() >= space.getMaxSize()) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "空间容量不足");
             }
         }
 
@@ -201,10 +209,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
         // 插入数据库之前，添加审核参数
         this.fillReviewParams(picture, loginUser);
-        // 保存数据到数据库
-        boolean result = this.saveOrUpdate(picture);// 保存或更新图片信息
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "上传图片失败，数据库操作失败");
 
+        // 更新空间的使用额度，（需同时操作两张表，所以在事务中执行）
+        // 开启事务
+        Long finalSpaceId = spaceId;
+        transactionTemplate.execute(status -> {
+            // 保存数据到数据库
+            boolean result = this.saveOrUpdate(picture);// 保存或更新图片信息
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "上传图片失败，数据库操作失败");
+            boolean update = spaceService.lambdaUpdate().eq(Space::getId, finalSpaceId).setSql("totalSize = totalSize + " + picture.getPicSize()).setSql("totalCount = totalCount + 1").update();
+            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间使用额度失败");
+            return picture;
+        });
         return PictureVO.objToVo(picture); // 返回图片VO对象
     }
 
@@ -241,10 +257,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             // 需要拼接查询条件
             // 保证or只对这个字段生效，所以使用and嵌套
             // and (searchText like "%searchText%" or introduction like "%searchText%")
-            queryWrapper.and(qw -> qw.like("name", searchText)
-                    .or()
-                    .like("introduction", searchText)
-            );
+            queryWrapper.and(qw -> qw.like("name", searchText).or().like("introduction", searchText));
         }
         queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
@@ -304,8 +317,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         List<PictureVO> pictureVOList = pictureList.stream().map(PictureVO::objToVo).collect(Collectors.toList());
         // 1. 关联查询用户信息
         Set<Long> userIdSet = pictureList.stream().map(Picture::getUserId).collect(Collectors.toSet());
-        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
-                .collect(Collectors.groupingBy(User::getId));
+        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream().collect(Collectors.groupingBy(User::getId));
         // 2. 填充信息
         pictureVOList.forEach(pictureVO -> {
             Long userId = pictureVO.getUserId();
@@ -458,8 +470,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             return cachePage;
         }
         // 3. 都未命中，查询数据库
-        Page<Picture> picturePage = this.page(new Page<>(pictureQueryRequest.getCurrent(), pictureQueryRequest.getPageSize()),
-                this.getQueryWrapper(pictureQueryRequest));
+        Page<Picture> picturePage = this.page(new Page<>(pictureQueryRequest.getCurrent(), pictureQueryRequest.getPageSize()), this.getQueryWrapper(pictureQueryRequest));
         Page<PictureVO> pictureVOPage = this.getPictureVOPage(picturePage, request);
         // 4. 更新本地缓存和redis缓存
         // 将数据重新存入 redis，设置过期时间5-10分钟
@@ -473,15 +484,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
     @Override
-    public void deletePicture(long userId, User loginUser) {
-        Picture oldpicture = this.getById(userId);
+    public void deletePicture(long pictureId, User loginUser) {
+        Picture oldpicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldpicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
         // 校验权限
         this.checkPictureAuth(loginUser, oldpicture);
         // 操作数据库删除
-        boolean delete = this.removeById(userId);
+        boolean delete = this.removeById(pictureId);
         ThrowUtils.throwIf(!delete, ErrorCode.OPERATION_ERROR);
-
+        // 开启事务
+        transactionTemplate.execute(status -> {
+            // 保存数据到数据库
+            boolean result = this.removeById(pictureId);// 保存或更新图片信息
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "上传图片失败，数据库操作失败");
+            boolean update = spaceService.lambdaUpdate()
+                    .eq(Space::getId, oldpicture.getSpaceId())
+                    .setSql("totalSize = totalSize - " + oldpicture.getPicSize())
+                    .setSql("totalCount = totalCount - 1").update();
+            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间使用额度失败");
+            return oldpicture;
+        });
         // 清理图片资源
         this.clearPictureFile(oldpicture);
     }
@@ -515,9 +537,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public void clearPictureFile(Picture oldPicture) {
         // 判断该图片是否被多条记录使用
         String pictureUrl = oldPicture.getUrl();
-        long count = this.lambdaQuery()
-                .eq(Picture::getUrl, pictureUrl)
-                .count();
+        long count = this.lambdaQuery().eq(Picture::getUrl, pictureUrl).count();
         // 有不止一条记录用到了该图片，不清理
         if (count > 1) {
             return;
