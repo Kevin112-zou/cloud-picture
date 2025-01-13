@@ -94,7 +94,7 @@ public class PictureVO implements Serializable {
     /**  
      * 创建用户信息  
      */  
-    private UserVo user;
+    private UserVO user;
   
     private static final long serialVersionUID = 1L;  
   

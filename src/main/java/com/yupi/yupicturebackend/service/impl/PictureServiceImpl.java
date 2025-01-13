@@ -28,7 +28,7 @@ import com.yupi.yupicturebackend.model.entity.Picture;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.yupi.yupicturebackend.model.enums.PictureReviewStatusEnum;
 import com.yupi.yupicturebackend.model.vo.PictureVO;
-import com.yupi.yupicturebackend.model.vo.UserVo;
+import com.yupi.yupicturebackend.model.vo.UserVO;
 import com.yupi.yupicturebackend.service.PictureService;
 import com.yupi.yupicturebackend.mapper.PictureMapper;
 import com.yupi.yupicturebackend.service.UserService;
@@ -247,7 +247,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (userId != null && userId > 0) {
             // 查询用户信息，封装到pictureVO中
             User user = userService.getById(userId);
-            UserVo userVo = userService.getUserVo(user); // 封装脱敏后的用户信息
+            UserVO userVo = userService.getUserVo(user); // 封装脱敏后的用户信息
             pictureVO.setUser(userVo);
         }
         return pictureVO;

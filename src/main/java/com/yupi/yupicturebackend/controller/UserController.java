@@ -12,8 +12,8 @@ import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.exception.ThrowUtils;
 import com.yupi.yupicturebackend.model.dto.user.*;
 import com.yupi.yupicturebackend.model.entity.User;
-import com.yupi.yupicturebackend.model.vo.LoginUserVo;
-import com.yupi.yupicturebackend.model.vo.UserVo;
+import com.yupi.yupicturebackend.model.vo.LoginUserVO;
+import com.yupi.yupicturebackend.model.vo.UserVO;
 import com.yupi.yupicturebackend.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -47,11 +47,11 @@ public class UserController {
      * @return 用户id
      */
     @PostMapping("/login")
-    public BaseResponse<LoginUserVo> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
-        LoginUserVo loginUserVo = userService.userLogin(userAccount, userPassword, request);
+        LoginUserVO loginUserVo = userService.userLogin(userAccount, userPassword, request);
         return ResultUtils.success(loginUserVo);
     }
 
@@ -72,7 +72,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/get/login")
-    public BaseResponse<LoginUserVo> getLoginUser(HttpServletRequest request) {
+    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         return ResultUtils.success(userService.getLoginUserVO(loginUser));
     }
@@ -99,7 +99,7 @@ public class UserController {
      * @return 脱敏后的用户信息
      */
     @GetMapping("/get/vo")
-    public  BaseResponse<UserVo> getUserVoById(Long id) {
+    public  BaseResponse<UserVO> getUserVoById(Long id) {
 
         BaseResponse<User> response = getUserById(id);
         // 封装脱敏后的用户信息
@@ -173,17 +173,17 @@ public class UserController {
      */
     @PostMapping("/list/page/vo")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE) // 限定只有管理员可以调用
-    public BaseResponse<Page<UserVo>> listUserVoByPage(@RequestBody UserQueryRequest userQueryRequest) {
+    public BaseResponse<Page<UserVO>> listUserVoByPage(@RequestBody UserQueryRequest userQueryRequest) {
         ThrowUtils.throwIf(userQueryRequest == null, ErrorCode.PARAMS_ERROR);
         long current = userQueryRequest.getCurrent(); // 获取当前页码
         long pageSize = userQueryRequest.getPageSize();// 获取页面大小
         // 封装分页查询条件, 查询用户列表(模糊查询)
         Page<User> userPage = userService.page(new Page<>(current, pageSize), userService.getQueryWrapper(userQueryRequest));
-        Page<UserVo> userVoPage = new Page<>(current,pageSize, userPage.getTotal());
+        Page<UserVO> userVoPage = new Page<>(current,pageSize, userPage.getTotal());
 
         // List<User> records = userPage.getRecords();
-        List<UserVo> userVoList = userService.getUserVoList(userPage.getRecords());
-        userVoPage.setRecords(userVoList);
+        List<UserVO> userVOList = userService.getUserVoList(userPage.getRecords());
+        userVoPage.setRecords(userVOList);
         return ResultUtils.success(userVoPage);
     }
 }

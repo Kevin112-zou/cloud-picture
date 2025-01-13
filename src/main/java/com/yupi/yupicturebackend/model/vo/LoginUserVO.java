@@ -1,6 +1,5 @@
 package com.yupi.yupicturebackend.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -10,7 +9,7 @@ import java.util.Date;
  * 用户脱敏后的信息
  */
 @Data
-public class LoginUserVo implements Serializable {
+public class LoginUserVO implements Serializable {
     /**
      * 用户id
      */

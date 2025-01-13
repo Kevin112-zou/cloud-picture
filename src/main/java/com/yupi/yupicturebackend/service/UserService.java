@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yupi.yupicturebackend.model.dto.user.UserQueryRequest;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yupi.yupicturebackend.model.vo.LoginUserVo;
-import com.yupi.yupicturebackend.model.vo.UserVo;
-import lombok.Data;
+import com.yupi.yupicturebackend.model.vo.LoginUserVO;
+import com.yupi.yupicturebackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -41,27 +40,27 @@ public interface UserService extends IService<User> {
      * @param userPassword 用户密码
      * @return
      */
-    LoginUserVo userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      *  获取脱敏后的登录用户信息
      * @param user 用户账号
      * @return 脱敏信息
      */
-    LoginUserVo getLoginUserVo(User user);
+    LoginUserVO getLoginUserVo(User user);
 
     /**
      *  获取脱敏后的用户信息
      * @param user 用户账号
      * @return 脱敏信息
      */
-    UserVo getUserVo(User user);
+    UserVO getUserVo(User user);
 
     /**
      *  获取脱敏后的用户信息
      * @return 脱敏后的用户信息列表
      */
-    List<UserVo> getUserVoList(List<User> userList);
+    List<UserVO> getUserVoList(List<User> userList);
 
     /**
      * 用户注销
@@ -90,7 +89,7 @@ public interface UserService extends IService<User> {
      * @param loginUser 登录用户
      * @return 脱敏信息
      */
-    LoginUserVo getLoginUserVO(User loginUser);
+    LoginUserVO getLoginUserVO(User loginUser);
 
     /**
      * 判断是否为管理员

@@ -13,8 +13,8 @@ import com.yupi.yupicturebackend.mapper.UserMapper;
 import com.yupi.yupicturebackend.model.dto.user.UserQueryRequest;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.yupi.yupicturebackend.model.enums.UserRoleEnum;
-import com.yupi.yupicturebackend.model.vo.LoginUserVo;
-import com.yupi.yupicturebackend.model.vo.UserVo;
+import com.yupi.yupicturebackend.model.vo.LoginUserVO;
+import com.yupi.yupicturebackend.model.vo.UserVO;
 import com.yupi.yupicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -97,11 +97,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 脱敏信息
      */
     @Override
-    public LoginUserVo getLoginUserVo(User user) {
+    public LoginUserVO getLoginUserVo(User user) {
         if(user == null){
             return null;
         }
-        LoginUserVo loginUserVo = new LoginUserVo();
+        LoginUserVO loginUserVo = new LoginUserVO();
         BeanUtil.copyProperties(user,loginUserVo);
         return loginUserVo;
     }
@@ -112,11 +112,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 脱敏信息
      */
     @Override
-    public UserVo getUserVo(User user) {
+    public UserVO getUserVo(User user) {
         if(user == null){
             return null;
         }
-        UserVo userVo = new UserVo();
+        UserVO userVo = new UserVO();
         BeanUtil.copyProperties(user,userVo);
         return userVo;
     }
@@ -127,20 +127,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 脱敏后的用户信息列表
      */
     @Override
-    public List<UserVo> getUserVoList(List<User> userList) {
+    public List<UserVO> getUserVoList(List<User> userList) {
         if(CollUtil.isEmpty(userList)){
             return null;
         }
-        List<UserVo> userVoList = CollUtil.newArrayList();
+        List<UserVO> userVOList = CollUtil.newArrayList();
         for(User user : userList){
-            UserVo userVo = getUserVo(user);
+            UserVO userVo = getUserVo(user);
             if(userVo != null){
-                userVoList.add(userVo);
+                userVOList.add(userVo);
             }
         }
         // stream写法
-        // userVoList = userList.stream().map(this::getUserVo).collect(Collectors.toList());
-        return userVoList;
+        // userVOList = userList.stream().map(this::getUserVo).collect(Collectors.toList());
+        return userVOList;
     }
 
     /**
@@ -219,11 +219,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return
      */
     @Override
-    public LoginUserVo getLoginUserVO(User user) {
+    public LoginUserVO getLoginUserVO(User user) {
         if (user == null) {
             return null;
         }
-        LoginUserVo loginUserVO = new LoginUserVo();
+        LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVO);
         return loginUserVO;
     }
@@ -239,7 +239,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     @Override
-    public LoginUserVo userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1. 校验
         if(StrUtil.hasBlank(userAccount, userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
