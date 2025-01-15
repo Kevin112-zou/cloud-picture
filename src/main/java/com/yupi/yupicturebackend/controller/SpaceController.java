@@ -58,15 +58,19 @@ public class SpaceController {
      */
     @GetMapping("/list/level")
     public BaseResponse<List<SpaceLevel>> listSpaceLevel() {
-        List<SpaceLevel> spaceLevelList = Arrays.stream(SpaceLevelEnum.values()) // 获取所有枚举
+        // 获取所有枚举
+        List<SpaceLevel> spaceLevelList = Arrays.stream(SpaceLevelEnum.values())
+                // 将枚举转换为SpaceLevel对象列表
                 .map(spaceLevelEnum -> new SpaceLevel(
-                        spaceLevelEnum.getValue(),
-                        spaceLevelEnum.getText(),
-                        spaceLevelEnum.getMaxCount(),
-                        spaceLevelEnum.getMaxSize()))
+                        spaceLevelEnum.getValue(), // 枚举值
+                        spaceLevelEnum.getText(), // 枚举文本
+                        spaceLevelEnum.getMaxCount(), // 最大数量
+                        spaceLevelEnum.getMaxSize())) // 最大尺寸
                 .collect(Collectors.toList());
+        // 返回成功响应
         return ResultUtils.success(spaceLevelList);
     }
+
 
     /**
      * 删除空间(本人和管理员均可删除)
