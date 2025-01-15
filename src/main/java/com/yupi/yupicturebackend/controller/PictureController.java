@@ -1,16 +1,19 @@
 package com.yupi.yupicturebackend.controller;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.yupi.yupicturebackend.annotation.AuthCheck;
 import com.yupi.yupicturebackend.common.BaseResponse;
 import com.yupi.yupicturebackend.common.DeleteRequest;
 import com.yupi.yupicturebackend.common.ResultUtils;
+import com.yupi.yupicturebackend.config.CacheConfig;
 import com.yupi.yupicturebackend.constant.UserConstant;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.exception.ThrowUtils;
+import com.yupi.yupicturebackend.mapper.PictureMapper;
 import com.yupi.yupicturebackend.model.dto.picture.*;
 import com.yupi.yupicturebackend.model.entity.Picture;
 import com.yupi.yupicturebackend.model.entity.Space;
@@ -23,15 +26,20 @@ import com.yupi.yupicturebackend.service.SpaceService;
 import com.yupi.yupicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.time.Duration;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static net.sf.jsqlparser.statement.select.ForClause.ForOption.JSON;
 
 @Slf4j
 @RestController
@@ -44,15 +52,17 @@ public class PictureController {
     private PictureService pictureService;
 
     @Resource
-    private SpaceService spaceService;
+    private StringRedisTemplate stringRedisTemplate;
     @Resource
-    private PictureTagCategory pictureTagCategory;
+    private PictureMapper pictureMapper;
+    @Resource
+    private SpaceService spaceService;
+
 
     /**
      * 上传图片（可重新上传）
      */
     @PostMapping("/upload")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<PictureVO> uploadPicture(
             @RequestPart("file") MultipartFile multipartFile,
             PictureUploadRequest pictureUploadRequest,
@@ -184,13 +194,44 @@ public class PictureController {
     /**
      * 分页获取图片列表（封装类）
      */
+//    @PostMapping("/list/page/vo")
+//    public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
+//                                                             HttpServletRequest request) {
+//        long current = pictureQueryRequest.getCurrent();
+//        long size = pictureQueryRequest.getPageSize();
+//        // 限制爬虫, 一次请求最多返回 20 条数据
+//        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+//        // 校验空间权限
+//        Long spaceId = pictureQueryRequest.getSpaceId();
+//        if (spaceId == null) {
+//            // 查询公开图库
+//            // 普通用户默认只能查看审核通过的图片
+//            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+//            pictureQueryRequest.setNullSpaceId(true);
+//        } else {
+//            // 私有空间
+//            User loginUser = userService.getLoginUser(request);
+//            Space space = spaceService.getById(spaceId);
+//            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
+//            if (!loginUser.getId().equals(space.getUserId())) {
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限！！！");
+//            }
+//        }
+//
+//        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+//                pictureService.getQueryWrapper(pictureQueryRequest));
+//        // 获取封装类
+//        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+//    }
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
                                                              HttpServletRequest request) {
-        long current = pictureQueryRequest.getCurrent();
         long size = pictureQueryRequest.getPageSize();
+        Long cursor = pictureQueryRequest.getCursor();
+
         // 限制爬虫, 一次请求最多返回 20 条数据
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+
         // 校验空间权限
         Long spaceId = pictureQueryRequest.getSpaceId();
         if (spaceId == null) {
@@ -208,8 +249,20 @@ public class PictureController {
             }
         }
 
-        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
-                pictureService.getQueryWrapper(pictureQueryRequest));
+        // 创建查询条件
+        LambdaQueryWrapper<Picture> queryWrapper = pictureService.getQueryWrapper(pictureQueryRequest).lambda();
+
+        // 添加游标条件
+        if (cursor != null) {
+            queryWrapper.lt(Picture::getId, cursor);
+        }
+
+        // 按 id 降序排序确保分页的连续性
+        queryWrapper.orderByDesc(Picture::getId);
+
+        // 查询数据库（固定使用第一页）
+        Page<Picture> picturePage = pictureService.page(new Page<>(1, size), queryWrapper);
+
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
     }

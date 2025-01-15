@@ -18,6 +18,10 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      * id
      */
     private Long id;
+    /**
+     * 游标（上一页最后一条数据的id）
+     */
+    private Long cursor;
 
     /**
      * 图片名称
