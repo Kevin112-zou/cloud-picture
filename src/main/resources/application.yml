@@ -19,9 +19,9 @@ spring:
     url: jdbc:mysql://localhost:3306/yu_picture?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
     username: root
     password: 123456
-    # 环境配置（本地）
-    # profiles:
-    # active: local
+  # 环境配置（本地）
+  profiles:
+    active: local
   # Redis 配置
   redis:
     database: 0
