@@ -217,8 +217,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             // 保存数据到数据库
             boolean result = this.saveOrUpdate(picture);// 保存或更新图片信息
             ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "上传图片失败，数据库操作失败");
-            boolean update = spaceService.lambdaUpdate().eq(Space::getId, finalSpaceId).setSql("totalSize = totalSize + " + picture.getPicSize()).setSql("totalCount = totalCount + 1").update();
-            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间使用额度失败");
+            if (finalSpaceId != null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, finalSpaceId)
+                        .setSql("totalSize = totalSize + " + picture.getPicSize())
+                        .setSql("totalCount = totalCount + 1")
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间使用额度失败");
+            }
+
             return picture;
         });
         return PictureVO.objToVo(picture); // 返回图片VO对象
